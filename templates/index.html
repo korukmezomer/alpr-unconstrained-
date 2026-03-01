@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPR - Otomatik Plaka Tanıma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --bg-panel: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.6);
+            --shadow-xl: rgba(0, 0, 0, 0.8);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 28px 40px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px var(--shadow-xl), 0 0 0 1px rgba(59, 130, 246, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header .icon {
+            color: var(--accent);
+            font-size: 1.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 12px;
+            border-radius: var(--radius-md);
+        }
+        
+        .btn-mobese {
+            background: var(--accent-gradient) !important;
+            border: none !important;
+            color: white !important;
+            padding: 12px 28px !important;
+            font-size: 0.9375rem !important;
+            font-weight: 600 !important;
+            border-radius: var(--radius-md) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4) !important;
+            letter-spacing: 0.3px !important;
+        }
+        
+        .btn-mobese:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5) !important;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+        }
+        
+        .main-panel {
+            background: var(--bg-panel);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 24px var(--shadow-lg);
+            backdrop-filter: blur(10px);
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .panel {
+            background: var(--bg-panel);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 32px;
+            box-shadow: 0 4px 16px var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .panel:hover {
+            box-shadow: 0 8px 24px var(--shadow-lg);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .panel-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel-title i {
+            color: var(--accent);
+            font-size: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 80px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .upload-area:hover::before,
+        .upload-area.dragover::before {
+            opacity: 1;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+            border-style: solid;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
+        }
+        
+        .upload-text {
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.3px;
+        }
+        
+        .upload-hint {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            position: relative;
+            z-index: 1;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border);
+            box-shadow: 0 4px 12px var(--shadow-lg);
+        }
+        
+        .file-preview {
+            margin-top: 24px;
+            padding: 24px;
+            background: var(--bg-dark);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            display: none;
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+        
+        .file-preview.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .file-preview img {
+            width: 100%;
+            max-height: 240px;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .file-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            padding: 12px;
+            background: var(--bg-panel);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-right-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            margin: 0 auto 24px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 24px;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        .result-image-container {
+            background: var(--bg-dark);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            margin-bottom: 32px;
+            box-shadow: 0 4px 16px var(--shadow);
+            transition: all 0.3s;
+        }
+        
+        .result-image-container:hover {
+            box-shadow: 0 8px 24px var(--shadow-lg);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .result-image {
+            width: 100%;
+            border-radius: var(--radius-md);
+            display: block;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-panel) 100%);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow-lg);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .plates-list {
+            background: var(--bg-dark);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+        
+        .plate-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-dark) 100%);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plate-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .plate-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px var(--shadow-lg);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .plate-item:hover::before {
+            opacity: 1;
+        }
+        
+        .plate-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .plate-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
+        .plate-badge {
+            background: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
+        }
+        
+        .error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 20px 24px;
+            border-radius: var(--radius-lg);
+            margin-top: 24px;
+            display: none;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .error::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--error);
+        }
+        
+        .error.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .info-section {
+            margin-top: 24px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-dark);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        .info-item i {
+            color: var(--accent);
+            width: 20px;
+        }
+        
+        .info-item span {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .frame-video-container {
+            background: var(--bg-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .frame-video-player {
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .frame-video-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .frame-video-player img {
+            width: 100%;
+            height: auto;
+            max-height: 600px;
+            object-fit: contain;
+            display: block;
+        }
+        
+        .frame-info-bar {
+            background: var(--bg-panel);
+            padding: 16px 20px;
+            display: flex;
+            gap: 24px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        
+        .frame-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .frame-info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .frame-info-value {
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .frame-info-value .plate-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-size: 0.75rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .sidebar {
+                grid-row: 2;
+            }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+        
+        /* Mobese Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            background: var(--bg-panel);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-header h2 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: var(--bg-hover);
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: var(--accent);
+            transform: rotate(90deg);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .modal-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .stream-panel {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .stream-panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stream-video-container {
+            flex: 1;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            min-height: 400px;
+        }
+        
+        .stream-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .stream-video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .stream-controls {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .stream-controls input {
+            flex: 1;
+            padding: 14px 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            transition: all 0.3s;
+        }
+        
+        .stream-controls input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .stream-controls button {
+            padding: 14px 28px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        
+        @media (max-width: 1200px) {
+            .modal-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-car icon"></i>
+                ALPR - Otomatik Plaka Tanıma Sistemi
+            </h1>
+            <button class="btn btn-mobese" onclick="openMobeseModal()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-video"></i>
+                Mobese Seyret
+            </button>
+        </div>
+        
+        <div class="main-panel">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-upload"></i>
+                    Görüntü Yükle
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">Dosyayı sürükle veya tıkla</div>
+                    <div class="upload-hint">JPG, PNG, MP4, AVI, MOV (Max: 100MB)</div>
+                    <div class="upload-hint" style="font-size: 0.75rem; margin-top: 4px; color: var(--text-secondary);">
+                        ⚡ Video işleme: Uzun videolar için otomatik optimizasyon aktif
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*,video/*">
+                </div>
+                
+                <div class="file-preview" id="filePreview">
+                    <img id="previewImage" src="" alt="Preview">
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+                
+                <button class="btn" id="processBtn" onclick="processFile()" disabled>
+                    <i class="fas fa-search"></i>
+                    <span id="processBtnText">Dosyayı İşle</span>
+                </button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text" id="loadingText">Dosya analiz ediliyor...</div>
+                    <div class="progress-bar" id="progressBar" style="display: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin-top: 20px; overflow: hidden;">
+                        <div id="progressFill" style="height: 100%; background: var(--accent); width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+                
+                <div class="error" id="error"></div>
+            </div>
+            
+            <div class="results" id="results">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="vehicleCount">0</div>
+                        <div class="stat-label">Araç Tespit Edildi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="plateCount">0</div>
+                        <div class="stat-label">Plaka Okundu</div>
+                    </div>
+                </div>
+                
+                <div class="result-image-container" id="resultContainer">
+                    <img id="resultImage" class="result-image" alt="Sonuç" style="display: none;">
+                    <video id="resultVideo" class="result-image" controls style="display: none; width: 100%;"></video>
+                </div>
+                
+                <!-- Real-time Frame Video Player for Videos -->
+                <div class="panel" id="frameGalleryPanel" style="display: none;">
+                    <div class="panel-title">
+                        <i class="fas fa-film"></i>
+                        Canlı Tespit Edilen Frame'ler
+                    </div>
+                    <div class="frame-video-container" id="frameVideoContainer">
+                        <div class="frame-video-player" id="frameVideoPlayer">
+                            <img id="currentFrameImage" src="" alt="Processing frame..." style="display: none; width: 100%; border-radius: 8px;">
+                            <div class="frame-video-placeholder" id="frameVideoPlaceholder">
+                                <i class="fas fa-video" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                                <div style="margin-top: 16px; color: var(--text-secondary);">Frame'ler işleniyor...</div>
+                            </div>
+                        </div>
+                        <div class="frame-info-bar" id="frameInfoBar" style="display: none;">
+                            <div class="frame-info-item">
+                                <span class="frame-info-label">Frame:</span>
+                                <span class="frame-info-value" id="currentFrameNumber">-</span>
+                            </div>
+                            <div class="frame-info-item">
+                                <span class="frame-info-label">Plakalar:</span>
+                                <span class="frame-info-value" id="currentFramePlates">-</span>
+                            </div>
+                            <div class="frame-info-item">
+                                <span class="frame-info-label">Araç:</span>
+                                <span class="frame-info-value" id="currentFrameVehicles">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-list"></i>
+                        Tespit Edilen Plakalar
+                    </div>
+                    <div class="plates-list" id="platesList">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <div>Henüz plaka tespit edilmedi</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="downloadImage()" id="downloadBtn" style="display: none;">
+                        <i class="fas fa-download"></i>
+                        Görüntüyü İndir
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-redo"></i>
+                        Yeni Görüntü
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-info-circle"></i>
+                    Bilgi
+                </div>
+                <div class="info-section">
+                    <div class="info-item">
+                        <i class="fas fa-square" style="color: #fbbf24;"></i>
+                        <span>Sarı kutular: Tespit edilen araçlar</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-square" style="color: #ef4444;"></i>
+                        <span>Kırmızı çizgiler: Tespit edilen plakalar</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-font"></i>
+                        <span>Plaka numaraları görüntü üzerinde gösterilir</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-cogs"></i>
+                        <span>YOLO + WPOD-NET + OCR modelleri kullanılıyor</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-line"></i>
+                    İstatistikler
+                </div>
+                <div class="info-section">
+                    <div class="info-item">
+                        <i class="fas fa-images"></i>
+                        <span>İşlenen görüntü: <strong id="processedCount">0</strong></span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-car"></i>
+                        <span>Toplam araç: <strong id="totalVehicles">0</strong></span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-id-card"></i>
+                        <span>Toplam plaka: <strong id="totalPlates">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobese Modal -->
+    <div class="modal" id="mobeseModal">
+        <div class="modal-header">
+            <h2><i class="fas fa-video"></i> Mobese Canlı Akış</h2>
+            <button class="modal-close" onclick="closeMobeseModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-content">
+            <div class="stream-panel">
+                <div class="stream-panel-title">
+                    <i class="fas fa-broadcast-tower"></i>
+                    Orijinal Akış
+                </div>
+                <div class="stream-video-container" id="originalStreamContainer">
+                    <img id="originalStreamVideo" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+                    <div class="empty-state" id="originalStreamPlaceholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <i class="fas fa-video" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                        <div style="margin-top: 16px; color: var(--text-secondary);">Akış başlatılıyor...</div>
+                    </div>
+                </div>
+                <div class="stream-controls">
+                    <input type="text" id="streamUrlInput" placeholder="M3U8 URL girin..." value="https://content.tvkur.com/l/c77i79j84cnrb6mlji70/master.m3u8">
+                    <button class="btn" onclick="startMobeseStream()">
+                        <i class="fas fa-play"></i>
+                        Başlat
+                    </button>
+                    <button class="btn btn-secondary" onclick="stopMobeseStream()">
+                        <i class="fas fa-stop"></i>
+                        Durdur
+                    </button>
+                </div>
+            </div>
+            <div class="stream-panel">
+                <div class="stream-panel-title">
+                    <i class="fas fa-search"></i>
+                    İşlenen Frame'ler
+                </div>
+                <div class="stream-video-container" id="processedStreamContainer">
+                    <img id="processedStreamImage" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+                    <div class="empty-state" id="processedStreamPlaceholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <i class="fas fa-cog fa-spin" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                        <div style="margin-top: 16px; color: var(--text-secondary);">Frame'ler işleniyor...</div>
+                    </div>
+                </div>
+                <div class="stream-controls" style="justify-content: space-between;">
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                        <span>İşlenen Frame: <strong id="mobeseProcessedFrames">0</strong></span>
+                        <span style="margin-left: 16px;">Plaka: <strong id="mobesePlateCount">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        let currentResultImage = null;
+        let currentSessionId = null;
+        let eventSource = null;
+        let frameQueue = [];
+        let isPlayingFrames = false;
+        let framePlayInterval = null;
+        let lastDisplayedFrameIndex = -1;
+        let stats = {
+            processed: 0,
+            totalVehicles: 0,
+            totalPlates: 0
+        };
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const previewImage = document.getElementById('previewImage');
+        const fileInfo = document.getElementById('fileInfo');
+        const processBtn = document.getElementById('processBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        function clearPreviousResults() {
+            // Clear all previous results
+            results.classList.remove('active');
+            errorDiv.classList.remove('active');
+            
+            // Clear result images/videos
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('resultVideo').style.display = 'none';
+            document.getElementById('resultImage').src = '';
+            document.getElementById('resultVideo').src = '';
+            
+            // Clear frame gallery
+            document.getElementById('frameGalleryPanel').style.display = 'none';
+            const framePlaceholder = document.getElementById('frameVideoPlaceholder');
+            const currentFrameImage = document.getElementById('currentFrameImage');
+            const frameInfoBar = document.getElementById('frameInfoBar');
+            if (framePlaceholder) framePlaceholder.style.display = 'block';
+            if (currentFrameImage) {
+                currentFrameImage.style.display = 'none';
+                currentFrameImage.src = '';
+            }
+            if (frameInfoBar) frameInfoBar.style.display = 'none';
+            
+            // Clear frame queue and stop playback
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            frameQueue = [];
+            lastDisplayedFrameIndex = -1;
+            if (framePlayInterval) {
+                clearInterval(framePlayInterval);
+                framePlayInterval = null;
+            }
+            isPlayingFrames = false;
+            
+            // Clear stats
+            document.getElementById('vehicleCount').textContent = '0';
+            document.getElementById('plateCount').textContent = '0';
+            
+            // Clear plates list
+            const platesList = document.getElementById('platesList');
+            platesList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <div>Henüz plaka tespit edilmedi</div>
+                </div>
+            `;
+            
+            // Remove frame count card if exists
+            const frameCountCard = document.getElementById('frameCount');
+            if (frameCountCard) {
+                frameCountCard.remove();
+            }
+            
+            // Hide download button
+            downloadBtn.style.display = 'none';
+        }
+        
+        function handleFile(file) {
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+            
+            if (!isImage && !isVideo) {
+                showError('Lütfen bir görüntü veya video dosyası seçin!');
+                return;
+            }
+            
+            // Clear previous results when new file is selected
+            clearPreviousResults();
+            
+            selectedFile = file;
+            processBtn.disabled = false;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (isImage) {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    if (document.getElementById('previewVideo')) {
+                        document.getElementById('previewVideo').style.display = 'none';
+                    }
+                } else if (isVideo) {
+                    if (!document.getElementById('previewVideo')) {
+                        const video = document.createElement('video');
+                        video.id = 'previewVideo';
+                        video.style.width = '100%';
+                        video.style.maxHeight = '200px';
+                        video.style.objectFit = 'contain';
+                        video.style.borderRadius = '6px';
+                        video.style.marginBottom = '12px';
+                        video.controls = true;
+                        previewImage.parentNode.insertBefore(video, previewImage);
+                    }
+                    const previewVideo = document.getElementById('previewVideo');
+                    previewVideo.src = e.target.result;
+                    previewVideo.style.display = 'block';
+                    previewImage.style.display = 'none';
+                }
+                fileInfo.textContent = `${file.name} • ${formatFileSize(file.size)} • ${isVideo ? 'Video' : 'Görüntü'}`;
+                filePreview.classList.add('active');
+                document.getElementById('processBtnText').textContent = isVideo ? 'Videoyu İşle' : 'Görüntüyü İşle';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function processFile() {
+            if (!selectedFile) {
+                showError('Lütfen önce bir dosya seçin!');
+                return;
+            }
+            
+            // Clear previous results before processing new file
+            clearPreviousResults();
+            
+            const isVideo = selectedFile.type.startsWith('video/');
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            loading.classList.add('active');
+            errorDiv.classList.remove('active');
+            processBtn.disabled = true;
+            
+            if (isVideo) {
+                document.getElementById('loadingText').textContent = 'Video işleniyor... Uzun videolar için optimize edilmiş işleme aktif. Lütfen bekleyin...';
+                document.getElementById('progressBar').style.display = 'block';
+            } else {
+                document.getElementById('loadingText').textContent = 'Görüntü analiz ediliyor...';
+                document.getElementById('progressBar').style.display = 'none';
+            }
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.type === 'video' && data.session_id) {
+                    // Start real-time streaming for video
+                    currentSessionId = data.session_id;
+                    startVideoStreaming(data.session_id);
+                    document.getElementById('frameGalleryPanel').style.display = 'block';
+                    results.classList.add('active');
+                } else {
+                    loading.classList.remove('active');
+                    processBtn.disabled = false;
+                    document.getElementById('progressBar').style.display = 'none';
+                    
+                    if (data.success) {
+                        const resultImage = document.getElementById('resultImage');
+                        const resultVideo = document.getElementById('resultVideo');
+                        
+                        if (data.type === 'video') {
+                            if (data.video) {
+                                resultVideo.src = data.video;
+                                resultVideo.style.display = 'block';
+                                resultImage.style.display = 'none';
+                                currentResultImage = null;
+                            } else {
+                                // Video too large to display
+                                resultVideo.style.display = 'none';
+                                resultImage.style.display = 'none';
+                                if (data.message) {
+                                    showError(data.message);
+                                }
+                            }
+                        } else {
+                            currentResultImage = data.image;
+                            resultImage.src = data.image;
+                            resultImage.style.display = 'block';
+                            resultVideo.style.display = 'none';
+                        }
+                        
+                        // Update stats
+                        const plates = data.plates || [];
+                        const vehicleCount = data.vehicle_count || plates.length || 0;
+                        const plateCount = data.plate_count || plates.length || 0;
+                        const processedFrames = data.processed_frames || 0;
+                        
+                        document.getElementById('vehicleCount').textContent = vehicleCount;
+                        document.getElementById('plateCount').textContent = plateCount;
+                        
+                        // Show processed frames info for videos
+                        if (data.type === 'video' && processedFrames > 0) {
+                            const statsGrid = document.querySelector('.stats-grid');
+                            if (statsGrid && !document.getElementById('frameCount')) {
+                                const frameCard = document.createElement('div');
+                                frameCard.className = 'stat-card';
+                                frameCard.id = 'frameCount';
+                                frameCard.innerHTML = `
+                                    <div class="stat-value">${processedFrames}</div>
+                                    <div class="stat-label">İşlenen Frame</div>
+                                `;
+                                statsGrid.appendChild(frameCard);
+                            } else if (document.getElementById('frameCount')) {
+                                document.getElementById('frameCount').querySelector('.stat-value').textContent = processedFrames;
+                            }
+                        }
+                        
+                        // Update global stats
+                        stats.processed++;
+                        stats.totalVehicles += vehicleCount;
+                        stats.totalPlates += plateCount;
+                        updateGlobalStats();
+                        
+                        // Display plates
+                        displayPlates(plates);
+                        
+                        results.classList.add('active');
+                        if (data.type === 'image') {
+                            downloadBtn.style.display = 'flex';
+                        } else {
+                            downloadBtn.style.display = 'none';
+                        }
+                        results.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        showError(data.error || 'Bir hata oluştu!');
+                    }
+                }
+            })
+            .catch(error => {
+                loading.classList.remove('active');
+                processBtn.disabled = false;
+                document.getElementById('progressBar').style.display = 'none';
+                showError('Sunucu hatası: ' + error.message);
+            });
+        }
+        
+        function displayPlates(plates) {
+            const platesList = document.getElementById('platesList');
+            
+            if (plates.length === 0) {
+                platesList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <div>Plaka tespit edilemedi</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            platesList.innerHTML = plates.map((plate, index) => `
+                <div class="plate-item">
+                    <div class="plate-number">${plate}</div>
+                    <div class="plate-badge">Araç ${index + 1}</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateGlobalStats() {
+            document.getElementById('processedCount').textContent = stats.processed;
+            document.getElementById('totalVehicles').textContent = stats.totalVehicles;
+            document.getElementById('totalPlates').textContent = stats.totalPlates;
+        }
+        
+        function downloadImage() {
+            if (!currentResultImage) return;
+            
+            const link = document.createElement('a');
+            link.href = currentResultImage;
+            link.download = 'alpr-result-' + Date.now() + '.jpg';
+            link.click();
+        }
+        
+        function startVideoStreaming(sessionId) {
+            // Close existing connection
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            // Reset frame queue and playback state
+            frameQueue = [];
+            isPlayingFrames = false;
+            lastDisplayedFrameIndex = -1;
+            if (framePlayInterval) {
+                clearInterval(framePlayInterval);
+                framePlayInterval = null;
+            }
+            
+            const frameVideoPlayer = document.getElementById('frameVideoPlayer');
+            const framePlaceholder = document.getElementById('frameVideoPlaceholder');
+            const currentFrameImage = document.getElementById('currentFrameImage');
+            const frameInfoBar = document.getElementById('frameInfoBar');
+            
+            // Reset frame info
+            if (document.getElementById('currentFrameNumber')) {
+                document.getElementById('currentFrameNumber').textContent = '-';
+            }
+            if (document.getElementById('currentFramePlates')) {
+                document.getElementById('currentFramePlates').innerHTML = '<span style="color: var(--text-secondary);">Bekleniyor...</span>';
+            }
+            if (document.getElementById('currentFrameVehicles')) {
+                document.getElementById('currentFrameVehicles').textContent = '-';
+            }
+            
+            // Hide placeholder, show player
+            framePlaceholder.style.display = 'none';
+            currentFrameImage.style.display = 'block';
+            frameInfoBar.style.display = 'flex';
+            
+            // Create EventSource for Server-Sent Events
+            eventSource = new EventSource('/stream/' + sessionId);
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.status === 'completed') {
+                        // Video processing completed
+                        loading.classList.remove('active');
+                        processBtn.disabled = false;
+                        document.getElementById('progressBar').style.display = 'none';
+                        eventSource.close();
+                        
+                        // Stop frame playing
+                        if (framePlayInterval) {
+                            clearInterval(framePlayInterval);
+                            framePlayInterval = null;
+                        }
+                        
+                        // Update final stats
+                        if (data.vehicle_count !== undefined) {
+                            document.getElementById('vehicleCount').textContent = data.vehicle_count;
+                            document.getElementById('plateCount').textContent = data.plate_count || 0;
+                            
+                            stats.totalVehicles += data.vehicle_count;
+                            stats.totalPlates += (data.plate_count || 0);
+                            updateGlobalStats();
+                            
+                            // Display plates (always call, even if empty, to show proper message)
+                            const plates = data.plates || [];
+                            console.log('Final plates received from SSE:', plates);
+                            console.log('Plate count from data:', data.plate_count);
+                            console.log('Full data object:', data);
+                            
+                            // Always display plates, even if empty
+                            displayPlates(plates);
+                            
+                            // Debug log
+                            console.log('Plates displayed:', plates.length);
+                        }
+                        
+                        // Show final video if available
+                        if (data.video) {
+                            const resultVideo = document.getElementById('resultVideo');
+                            resultVideo.src = data.video;
+                            resultVideo.style.display = 'block';
+                            document.getElementById('resultImage').style.display = 'none';
+                        }
+                    } else if (data.status === 'error') {
+                        loading.classList.remove('active');
+                        processBtn.disabled = false;
+                        showError(data.message || 'Video işleme hatası');
+                        eventSource.close();
+                        if (framePlayInterval) {
+                            clearInterval(framePlayInterval);
+                            framePlayInterval = null;
+                        }
+                    } else if (data.frame_number !== undefined) {
+                        // New frame detected - add to queue
+                        frameQueue.push(data);
+                        
+                        // Start playing if not already started
+                        if (!isPlayingFrames) {
+                            startFramePlayback();
+                        } else {
+                            // If already playing, try to display immediately for better real-time feel
+                            // The interval will also catch it, but this makes it more responsive
+                            displayNextFrameIfAvailable();
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                }
+            };
+            
+            eventSource.onerror = function(event) {
+                console.error('SSE error:', event);
+                // Don't close on error, might be temporary
+            };
+        }
+        
+        function startFramePlayback() {
+            if (isPlayingFrames) return;
+            
+            isPlayingFrames = true;
+            
+            // Play frames at 5 FPS (every 200ms) for mobese - much faster
+            framePlayInterval = setInterval(function() {
+                // Check if there are new frames to display
+                if (lastDisplayedFrameIndex < frameQueue.length - 1) {
+                    // Display next frame
+                    lastDisplayedFrameIndex++;
+                    const frameData = frameQueue[lastDisplayedFrameIndex];
+                    displayFrame(frameData);
+                }
+                // If we've shown all frames, wait for new ones to arrive
+                // Don't loop back, just wait silently
+            }, 200); // 5 FPS for mobese (much faster)
+        }
+        
+        function displayNextFrameIfAvailable() {
+            // Immediately display new frame if available (for real-time feel)
+            if (lastDisplayedFrameIndex < frameQueue.length - 1) {
+                lastDisplayedFrameIndex++;
+                const frameData = frameQueue[lastDisplayedFrameIndex];
+                displayFrame(frameData);
+            }
+        }
+        
+        function displayFrame(frameData) {
+            const currentFrameImage = document.getElementById('currentFrameImage');
+            const currentFrameNumber = document.getElementById('currentFrameNumber');
+            const currentFramePlates = document.getElementById('currentFramePlates');
+            const currentFrameVehicles = document.getElementById('currentFrameVehicles');
+            
+            // Update frame image
+            currentFrameImage.src = frameData.image;
+            
+            // Update frame info
+            currentFrameNumber.textContent = '#' + frameData.frame_number;
+            
+            if (frameData.plates && frameData.plates.length > 0) {
+                currentFramePlates.innerHTML = frameData.plates.map(p => 
+                    '<span class="plate-badge">' + p + '</span>'
+                ).join('');
+            } else {
+                currentFramePlates.innerHTML = '<span style="color: var(--text-secondary);">Yok</span>';
+            }
+            
+            currentFrameVehicles.textContent = frameData.vehicle_count || 0;
+        }
+        
+        function resetForm() {
+            // Clear all results
+            clearPreviousResults();
+            
+            // Reset form state
+            selectedFile = null;
+            currentResultImage = null;
+            currentSessionId = null;
+            filePreview.classList.remove('active');
+            processBtn.disabled = true;
+            fileInput.value = '';
+            
+            // Reset preview
+            if (document.getElementById('previewVideo')) {
+                document.getElementById('previewVideo').style.display = 'none';
+            }
+            previewImage.style.display = 'block';
+            previewImage.src = '';
+            document.getElementById('fileInfo').textContent = '';
+            document.getElementById('processBtnText').textContent = 'Dosyayı İşle';
+            
+            // Reset loading state
+            loading.classList.remove('active');
+            document.getElementById('progressBar').style.display = 'none';
+        }
+        
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.add('active');
+            results.classList.remove('active');
+        }
+        
+        // Mobese Stream Functions
+        let mobeseSessionId = null;
+        let mobeseEventSource = null;
+        let mobeseStreamVideo = null;
+        
+        function openMobeseModal() {
+            document.getElementById('mobeseModal').classList.add('active');
+            // Initialize video element
+            mobeseStreamVideo = document.getElementById('originalStreamVideo');
+        }
+        
+        function closeMobeseModal() {
+            stopMobeseStream();
+            document.getElementById('mobeseModal').classList.remove('active');
+        }
+        
+        function startMobeseStream() {
+            const streamUrl = document.getElementById('streamUrlInput').value;
+            if (!streamUrl) {
+                alert('Lütfen bir M3U8 URL girin!');
+                return;
+            }
+            
+            // Stop existing stream
+            stopMobeseStream();
+            
+            // Original stream will be shown via SSE frames (not direct video)
+            const originalPlaceholder = document.getElementById('originalStreamPlaceholder');
+            originalPlaceholder.innerHTML = `
+                <i class="fas fa-cog fa-spin" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                <div style="margin-top: 16px; color: var(--text-secondary);">Akış bağlantısı kuruluyor...</div>
+            `;
+            
+            // Start processing stream
+            fetch('/start_stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: streamUrl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mobeseSessionId = data.session_id;
+                    startMobeseStreaming(data.session_id);
+                } else {
+                    alert('Akış başlatılamadı: ' + (data.error || 'Bilinmeyen hata'));
+                }
+            })
+            .catch(error => {
+                alert('Akış başlatma hatası: ' + error.message);
+            });
+        }
+        
+        function stopMobeseStream() {
+            // Stop processing stream
+            if (mobeseSessionId) {
+                fetch('/stop_stream/' + mobeseSessionId, {
+                    method: 'POST'
+                }).catch(e => console.error('Stop stream error:', e));
+                
+                if (mobeseEventSource) {
+                    mobeseEventSource.close();
+                    mobeseEventSource = null;
+                }
+                mobeseSessionId = null;
+            }
+            
+            // Clear frame playback intervals
+            if (window.mobeseOriginalInterval) {
+                clearInterval(window.mobeseOriginalInterval);
+                window.mobeseOriginalInterval = null;
+            }
+            if (window.mobeseProcessedInterval) {
+                clearInterval(window.mobeseProcessedInterval);
+                window.mobeseProcessedInterval = null;
+            }
+            
+            // Reset UI
+            document.getElementById('originalStreamVideo').style.display = 'none';
+            document.getElementById('originalStreamPlaceholder').style.display = 'block';
+            document.getElementById('processedStreamImage').style.display = 'none';
+            document.getElementById('processedStreamPlaceholder').style.display = 'block';
+            document.getElementById('mobeseProcessedFrames').textContent = '0';
+            document.getElementById('mobesePlateCount').textContent = '0';
+        }
+        
+        function startMobeseStreaming(sessionId) {
+            if (mobeseEventSource) {
+                mobeseEventSource.close();
+            }
+            
+            const originalImage = document.getElementById('originalStreamVideo');
+            const originalPlaceholder = document.getElementById('originalStreamPlaceholder');
+            const processedImage = document.getElementById('processedStreamImage');
+            const processedPlaceholder = document.getElementById('processedStreamPlaceholder');
+            
+            let mobeseOriginalQueue = [];
+            let mobeseProcessedQueue = [];
+            let mobeseOriginalLast = -1;
+            let mobeseProcessedLast = -1;
+            let mobeseOriginalInterval = null;
+            let mobeseProcessedInterval = null;
+            
+            // Hide placeholders, show images
+            originalPlaceholder.style.display = 'none';
+            processedPlaceholder.style.display = 'none';
+            originalImage.style.display = 'block';
+            processedImage.style.display = 'block';
+            
+            // Fast frame playback for original stream (30 FPS for smooth real-time)
+            function startMobeseOriginalPlayback() {
+                if (mobeseOriginalInterval) return;
+                
+                console.log('Starting original stream playback');
+                mobeseOriginalInterval = setInterval(function() {
+                    if (mobeseOriginalLast < mobeseOriginalQueue.length - 1) {
+                        mobeseOriginalLast++;
+                        const frameData = mobeseOriginalQueue[mobeseOriginalLast];
+                        originalImage.src = frameData.image;
+                    } else if (mobeseOriginalQueue.length > 0) {
+                        // If we've shown all frames, show the last one again (smooth playback)
+                        const lastFrame = mobeseOriginalQueue[mobeseOriginalQueue.length - 1];
+                        originalImage.src = lastFrame.image;
+                    }
+                }, 33); // ~30 FPS for original stream (smooth real-time)
+            }
+            
+            // Fast frame playback for processed frames (10 FPS)
+            function startMobeseProcessedPlayback() {
+                if (mobeseProcessedInterval) return;
+                
+                console.log('Starting mobese processed frame playback');
+                mobeseProcessedInterval = setInterval(function() {
+                    if (mobeseProcessedLast < mobeseProcessedQueue.length - 1) {
+                        mobeseProcessedLast++;
+                        const frameData = mobeseProcessedQueue[mobeseProcessedLast];
+                        console.log('Displaying processed frame:', frameData.frame_number);
+                        processedImage.src = frameData.image;
+                        document.getElementById('mobeseProcessedFrames').textContent = frameData.frame_number || 0;
+                        
+                        if (frameData.plates && frameData.plates.length > 0) {
+                            document.getElementById('mobesePlateCount').textContent = frameData.plates.length;
+                        } else {
+                            document.getElementById('mobesePlateCount').textContent = '0';
+                        }
+                    }
+                }, 100); // 10 FPS for processed frames
+            }
+            
+            mobeseEventSource = new EventSource('/stream/' + sessionId);
+            
+            mobeseEventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('Mobese SSE data received:', data.status, data.frame_number);
+                    
+                    if (data.status === 'stopped' || data.status === 'error') {
+                        console.log('Mobese stream stopped or error');
+                        if (mobeseOriginalInterval) {
+                            clearInterval(mobeseOriginalInterval);
+                            mobeseOriginalInterval = null;
+                        }
+                        if (mobeseProcessedInterval) {
+                            clearInterval(mobeseProcessedInterval);
+                            mobeseProcessedInterval = null;
+                        }
+                        mobeseEventSource.close();
+                        return;
+                    }
+                    
+                    // Handle original frames
+                    if (data.status === 'original_frame' && data.frame_number !== undefined) {
+                        console.log('Original frame received:', data.frame_number);
+                        mobeseOriginalQueue.push(data);
+                        if (!mobeseOriginalInterval) {
+                            startMobeseOriginalPlayback();
+                        }
+                    }
+                    
+                    // Handle processed frames (status can be 'frame' or undefined for backward compatibility)
+                    if ((data.status === 'frame' || data.frame_number !== undefined) && data.image) {
+                        console.log('Processed frame received:', data.frame_number);
+                        if (data.status !== 'original_frame') {  // Don't add original frames to processed queue
+                            mobeseProcessedQueue.push(data);
+                            if (!mobeseProcessedInterval) {
+                                startMobeseProcessedPlayback();
+                            }
+                        }
+                    } else if (data.status === 'completed') {
+                        // Update final stats
+                        console.log('Mobese stream completed');
+                        if (data.plate_count !== undefined) {
+                            document.getElementById('mobesePlateCount').textContent = data.plate_count;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e, event.data);
+                }
+            };
+            
+            mobeseEventSource.onerror = function(event) {
+                console.error('SSE error:', event);
+            };
+        }
+        
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('mobeseModal');
+            if (event.target === modal) {
+                closeMobeseModal();
+            }
+        }
+    </script>
+</body>
+</html>
+

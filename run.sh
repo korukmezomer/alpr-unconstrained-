@@ -41,26 +41,69 @@ usage() {
 	echo ""
 	echo " Usage:"
 	echo ""
-	echo "   bash $0 -i input/dir -o output/dir -c csv_file.csv [-h] [-l path/to/model]:"
+	echo "   bash $0 -i input/dir -o output/dir -c csv_file.csv [-h] [-l path/to/model] [-w]:"
 	echo ""
 	echo "   -i   Input dir path (containing JPG or PNG images)"
 	echo "   -o   Output dir path"
 	echo "   -c   Output CSV file path"
 	echo "   -l   Path to Keras LP detector model (default = $lp_model)"
+	echo "   -w   Launch web interface instead of batch processing"
 	echo "   -h   Print this help information"
 	echo ""
 	exit 1
 }
 
-while getopts 'i:o:c:l:h' OPTION; do
+web_mode=0
+while getopts 'i:o:c:l:hw' OPTION; do
 	case $OPTION in
 		i) input_dir=$OPTARG;;
 		o) output_dir=$OPTARG;;
 		c) csv_file=$OPTARG;;
 		l) lp_model=$OPTARG;;
+		w) web_mode=1;;
 		h) usage;;
 	esac
 done
+
+# If web mode, launch web interface
+if [ $web_mode -eq 1 ]; then
+	echo "=========================================="
+	echo "  Web Arayüzü Başlatılıyor..."
+	echo "=========================================="
+	echo ""
+	
+	# Check if Flask is installed
+	python -c "import flask" 2>/dev/null
+	if [ $? -ne 0 ]; then
+		echo "Flask bulunamadı. Yükleniyor..."
+		pip install flask 2>/dev/null
+		if [ $? -ne 0 ]; then
+			echo "HATA: Flask yüklenemedi!"
+			echo "Lütfen manuel olarak yükleyin: pip install flask"
+			exit 1
+		fi
+	fi
+	
+	echo "Arayüz başlatılıyor..."
+	echo ""
+	echo "=========================================="
+	echo "  Web Arayüzü Hazır!"
+	echo "=========================================="
+	echo ""
+	echo "  🌐 Yerel Erişim: http://localhost:5000"
+	echo "  🌍 Ağ Erişimi:   http://0.0.0.0:5000"
+	echo ""
+	echo "  ⚡ HIZLI ERİŞİM:"
+	echo "     Tarayıcınızda şu adresi açın:"
+	echo "     >>> http://localhost:5000 <<<"
+	echo ""
+	echo "  Çıkmak için Ctrl+C tuşlarına basın."
+	echo "=========================================="
+	echo ""
+	
+	python web_app.py
+	exit 0
+fi
 
 if [ -z "$input_dir"  ]; then echo "Input dir not set."; usage; exit 1; fi
 if [ -z "$output_dir" ]; then echo "Ouput dir not set."; usage; exit 1; fi
@@ -104,3 +147,6 @@ rm $output_dir/*car.png
 rm $output_dir/*_cars.txt
 rm $output_dir/*_lp.txt
 rm $output_dir/*_str.txt
+
+# Open output directory
+open $output_dir
