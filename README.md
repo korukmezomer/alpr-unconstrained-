@@ -1,67 +1,146 @@
-# ALPR in Unscontrained Scenarios
+ALPR Sistemi – Türkiye’ye Özel Geliştirilmiş Hibrit Plaka Tanıma Platformu
+👨‍💻 Geliştirici
 
-## Introduction
+Ömer Körükmez
 
-This repository contains the author's implementation of ECCV 2018 paper "License Plate Detection and Recognition in Unconstrained Scenarios".
+🎯 Proje Hakkında
 
-* Paper webpage: http://sergiomsilva.com/pubs/alpr-unconstrained/
+Bu proje, canlı MOBESE kamera akışları ve statik görüntüler üzerinden gerçek zamanlı plaka tespiti ve plaka okuma yapabilen hibrit bir ALPR (Automatic License Plate Recognition) sistemidir.
 
-If you use results produced by our code in any publication, please cite our paper:
+Sistem, temel olarak ECCV 2018 çalışması olan
+License Plate Detection and Recognition in Unconstrained Scenarios mimarisini temel almakta olup, Türkiye şartlarına ve MOBESE altyapısına uygun şekilde genişletilmiş ve modernleştirilmiştir.
 
-```
-@INPROCEEDINGS{silva2018a,
-  author={S. M. Silva and C. R. Jung}, 
-  booktitle={2018 European Conference on Computer Vision (ECCV)}, 
-  title={License Plate Detection and Recognition in Unconstrained Scenarios}, 
-  year={2018}, 
-  pages={580-596}, 
-  doi={10.1007/978-3-030-01258-8_36}, 
-  month={Sep},}
-```
+Projede klasik WPOD-NET yaklaşımı korunmuş, buna ek olarak Türkiye plakalarına özel eğitilmiş YOLOv8 tabanlı modern bir plaka tespit modeli entegre edilmiştir.
 
-## Requirements
+🧠 Sistem Mimarisi
+🔹 1️⃣ Klasik ALPR Pipeline (Python 2 – Orijinal Mimari)
+4
 
-In order to easily run the code, you must have installed the Keras framework with TensorFlow backend. The Darknet framework is self-contained in the "darknet" folder and must be compiled before running the tests. To build Darknet just type "make" in "darknet" folder:
+Bu yapı aşağıdaki adımlardan oluşur:
 
-```shellscript
-$ cd darknet && make
-```
+Araç Tespiti (YOLO / Darknet)
 
-**The current version was tested in an Ubuntu 16.04 machine, with Keras 2.2.4, TensorFlow 1.5.0, OpenCV 2.4.9, NumPy 1.14 and Python 2.7.**
+Plaka Bölgesi Tespiti (WPOD-NET)
 
-## Download Models
+Karakter Segmentasyonu
 
-After building the Darknet framework, you must execute the "get-networks.sh" script. This will download all the trained models:
+OCR ile Plaka Okuma
 
-```shellscript
-$ bash get-networks.sh
-```
+CSV çıktısı üretimi
 
-## Running a simple test
+Bu pipeline Python 2.7 + Keras 2.2.4 + TensorFlow 1.x ortamında çalışmaktadır.
 
-Use the script "run.sh" to run our ALPR approach. It requires 3 arguments:
-* __Input directory (-i):__ should contain at least 1 image in JPG or PNG format;
-* __Output directory (-o):__ during the recognition process, many temporary files will be generated inside this directory and erased in the end. The remaining files will be related to the automatic annotated image;
-* __CSV file (-c):__ specify an output CSV file.
+🔹 2️⃣ Türkiye’ye Özel Geliştirilmiş YOLOv8 Entegrasyonu (Python 3)
+4
 
-```shellscript
-$ bash get-networks.sh && bash run.sh -i samples/test -o /tmp/output -c /tmp/output/results.csv
-```
+Bu projede ek olarak:
 
-## Training the LP detector
+🇹🇷 Türkiye plaka formatına özel eğitilmiş YOLOv8 best.pt modeli
 
-To train the LP detector network from scratch, or fine-tuning it for new samples, you can use the train-detector.py script. In folder samples/train-detector there are 3 annotated samples which are used just for demonstration purposes. To correctly reproduce our experiments, this folder must be filled with all the annotations provided in the training set, and their respective images transferred from the original datasets.
+Python 3 + Ultralytics altyapısı
 
-The following command can be used to train the network from scratch considering the data inside the train-detector folder:
+Canlı MOBESE kamera akışı desteği
 
-```shellscript
-$ mkdir models
-$ python create-model.py eccv models/eccv-model-scracth
-$ python train-detector.py --model models/eccv-model-scracth --name my-trained-model --train-dir samples/train-detector --output-dir models/my-trained-model/ -op Adam -lr .001 -its 300000 -bs 64
-```
+Otomatik fallback mekanizması
 
-For fine-tunning, use your model with --model option.
+Çalışma Mantığı
+1️⃣ Önce: YOLOv8 best.pt (Python 3)
+2️⃣ Başarısız olursa: WPOD-NET (Python 2)
 
-## A word on GPU and CPU
+Bu hibrit yapı sayesinde:
 
-We know that not everyone has an NVIDIA card available, and sometimes it is cumbersome to properly configure CUDA. Thus, we opted to set the Darknet makefile to use CPU as default instead of GPU to favor an easy execution for most people instead of a fast performance. Therefore, the vehicle detection and OCR will be pretty slow. If you want to accelerate them, please edit the Darknet makefile variables to use GPU.
+Daha yüksek doğruluk
+
+Gerçek zamanlı performans
+
+Esnek mimari
+
+Eski sistemlerle uyumluluk
+
+sağlanmıştır.
+
+🔥 Özellikler
+
+✅ Canlı MOBESE Kamera Desteği
+✅ Türkiye Plakalarına Özel Eğitimli Model
+✅ YOLOv8 Entegrasyonu
+✅ Otomatik Python 2/3 Hibrit Çalışma
+✅ Darknet CPU/GPU Desteği
+✅ Web Arayüzü (Flask)
+✅ Toplu Görüntü İşleme
+✅ CSV Raporlama
+✅ Otomatik Model Fallback
+
+⚙️ Kurulum Talimatları
+1️⃣ Ortamı Aktifleştirin
+conda activate alpr_py2
+2️⃣ Darknet Derleme (İlk Kurulum)
+cd darknet
+make
+cd ..
+3️⃣ Model Dosyalarını İndirin
+bash get-networks.sh
+4️⃣ YOLOv8 Kurulumu (Türkiye Modeli İçin)
+python3 -m pip install ultralytics
+
+Model yolu:
+
+data/mobese-detector/mobese-lp-yolov8.pt
+🌐 Web Arayüzü Başlatma
+python web_app.py
+
+Tarayıcıdan açın:
+
+http://localhost:5000
+📦 Toplu İşleme
+bash run.sh -i samples/test -o /tmp/output -c /tmp/output/results.csv
+📊 Log Kontrolü
+YOLOv8 Kullanıldığında:
+✅ Mobese YOLOv8 plaka tespiti modeli kullanılıyor...
+Frame X - ✅ best.pt kullanıldı!
+Fallback Durumunda:
+⚠️ YOLOv8 başarısız, WPOD-NET kullanılıyor...
+🧩 Hibrit Python Mimarisi
+İşlem	Python	Model
+Araç Tespiti	Python 2	YOLO
+Plaka Tespiti	Python 3	YOLOv8 (best.pt)
+Fallback	Python 2	WPOD-NET
+OCR	Python 2	Darknet OCR
+🚦 Performans
+
+YOLOv8 Nano yapı → Gerçek zamanlı tespit
+
+YOLOv3-tiny → Hızlı araç algılama
+
+Optimize edilmiş threshold değerleri
+
+Frame skipping desteği
+
+🎓 Akademik Referans
+
+Bu sistem aşağıdaki çalışmayı temel alarak genişletilmiştir:
+
+License Plate Detection and Recognition in Unconstrained Scenarios
+ECCV 2018
+
+Ancak proje, Türkiye MOBESE altyapısı ve modern YOLOv8 mimarisi ile yeniden tasarlanmış ve geliştirilmiştir.
+
+🛡️ Not
+
+Bu sistem:
+
+Trafik analizi
+
+Akıllı şehir sistemleri
+
+Otopark otomasyonu
+
+Güvenlik uygulamaları
+
+için kullanılabilir.
+
+👑 Sonuç
+
+Bu proje klasik ALPR mimarisi ile modern YOLOv8 yaklaşımını birleştirerek:
+
+🇹🇷 Türkiye’ye özel, gerçek zamanlı, hibrit ve yüksek doğruluklu bir plaka tanıma sistemi sunmaktadır.
